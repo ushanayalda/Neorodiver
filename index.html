@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>السجل اليومي – صفحة واحدة</title>
+  <style>
+    :root{
+      --font: Arial, system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
+      --ink:#111;
+      --muted:#444;
+      --border:#e6e6e6;
+      --bg:#ffffff;
+      --panel:#f6f6f6;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family:var(--font);
+      background:var(--panel);
+      color:var(--ink);
+      line-height:1.55;
+    }
+
+    header{
+      position:sticky;
+      top:0;
+      z-index:10;
+      background:#fff;
+      border-bottom:1px solid var(--border);
+      padding:10px 12px;
+    }
+
+    .topbar{
+      max-width:980px;
+      margin:0 auto;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+    }
+
+    .title{
+      font-weight:900;
+      font-size:16px;
+    }
+
+    .controls{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    button{
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--ink);
+      padding:10px 12px;
+      border-radius:12px;
+      font-family:var(--font);
+      font-size:14px;
+      cursor:pointer;
+    }
+    button:hover{ background:#fafafa; }
+    button:active{ transform:translateY(1px); }
+
+    main{
+      padding:12px;
+      display:flex;
+      justify-content:center;
+    }
+
+    /* Single A4 sheet container */
+    .sheet{
+      width:210mm;
+      min-height:297mm;
+      background:var(--bg);
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:12mm;
+      box-shadow:0 8px 18px rgba(0,0,0,.08);
+    }
+
+    .row2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-bottom:10px;
+    }
+
+    .field{
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .field label{
+      font-weight:800;
+      font-size:13px;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+
+    input[type="text"], input[type="time"], input[type="number"]{
+      width:60%;
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:10px;
+      font-size:15px;
+      outline:none;
+      background:#fff;
+    }
+    input[type="number"]{ width:45%; }
+
+    .section{
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px;
+      margin:10px 0;
+      page-break-inside:avoid;
+    }
+
+    .section h2{
+      margin:0 0 8px;
+      font-size:15px;
+      font-weight:900;
+    }
+
+    .checks{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:8px 10px;
+    }
+
+    .check{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      padding:8px;
+      border-radius:10px;
+      border:1px solid transparent;
+    }
+    .check:hover{ background:#fafafa; border-color:var(--border); }
+
+    input[type="checkbox"]{
+      width:20px;
+      height:20px;
+      margin-top:2px;
+      flex:0 0 auto;
+    }
+    .check span{
+      font-size:14px;
+      line-height:1.5;
+    }
+
+    textarea{
+      width:100%;
+      min-height:42px;
+      resize:none;
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:10px;
+      font-size:14px;
+      outline:none;
+      margin-top:8px;
+    }
+
+    .painRow{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      margin-top:8px;
+      flex-wrap:wrap;
+    }
+    .painRow .label{
+      font-weight:800;
+      color:var(--muted);
+      font-size:13px;
+      white-space:nowrap;
+    }
+    .painScale{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+      justify-content:flex-start;
+    }
+    .painScale label{
+      display:flex;
+      gap:6px;
+      align-items:center;
+      border:1px solid var(--border);
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:12px;
+      cursor:pointer;
+      background:#fff;
+    }
+    .painScale input{ margin:0; width:16px; height:16px; }
+
+    .footerRow{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+
+    /* Print: force single page A4 and hide header */
+    @media print{
+      header{ display:none !important; }
+      body{ background:#fff; }
+      main{ padding:0; }
+      .sheet{
+        width:210mm;
+        min-height:297mm;
+        border:none;
+        border-radius:0;
+        box-shadow:none;
+        padding:12mm;
+        margin:0;
+      }
+      @page{
+        size: A4;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="topbar">
+    <div class="title">السجل اليومي – صفحة واحدة</div>
+    <div class="controls">
+      <!-- Inline print works in more browsers -->
+      <button type="button" onclick="window.print()">🖨️ طباعة</button>
+      <button type="button" id="btnClear">🧹 مسح</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <form class="sheet" id="dailyForm" autocomplete="off">
+    <div class="row2">
+      <div class="field">
+        <label>التاريخ</label>
+        <input type="text" name="date" placeholder="____ / ____ / ______" />
+      </div>
+      <div class="field">
+        <label>الوقت</label>
+        <input type="time" name="time" />
+      </div>
+      <div class="field" style="grid-column:1 / -1;">
+        <label>عدد ساعات النوم</label>
+        <input type="number" name="sleep_hours" min="0" max="24" step="0.5" placeholder="مثال: 7" />
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>الدواء اليوم</h2>
+      <div class="checks">
+        <label class="check"><input type="checkbox" name="med_fluoxetine"><span>فلوكستين</span></label>
+        <label class="check"><input type="checkbox" name="med_olanzapine"><span>أولانزابين</span></label>
+        <label class="check"><input type="checkbox" name="med_atomoxetine"><span>أتوموكسيتين</span></label>
+        <div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>1) المهام والتنظيم</h2>
+      <div class="checks">
+        <label class="check"><input type="checkbox" name="task_done_one"><span>أنهيتُ مهمة واحدة على الأقل</span></label>
+        <label class="check"><input type="checkbox" name="task_started_not_finished"><span>بدأتُ أكثر من عمل ولم أكمله</span></label>
+        <label class="check"><input type="checkbox" name="needed_reminders"><span>احتجتُ تذكير أكثر من 3 مرات</span></label>
+        <label class="check"><input type="checkbox" name="clear_plan_done"><span>كان عندي خطة واضحة وأنهيتها</span></label>
+      </div>
+      <textarea name="task_note" placeholder="إذا أردتِ، اكتبي جملة قصيرة..."></textarea>
+    </div>
+
+    <div class="section">
+      <h2>2) الكلام والتواصل</h2>
+      <div class="checks">
+        <label class="check"><input type="checkbox" name="talk_5min"><span>تكلمتُ أكثر من 5 دقائق بدون توقف</span></label>
+        <label class="check"><input type="checkbox" name="repeat_talk"><span>كررتُ نفس الكلام أكثر من 3 مرات</span></label>
+        <label class="check"><input type="checkbox" name="orders_no_response"><span>أعطيتُ أوامر بدون انتظار رد</span></label>
+        <label class="check"><input type="checkbox" name="normal_conversation"><span>صار حديث طبيعي (أخذ ورد)</span></label>
+      </div>
+      <textarea name="talk_note" placeholder="إذا أردتِ، اكتبي جملة قصيرة..."></textarea>
+    </div>
+
+    <div class="section">
+      <h2>3) المشي وحركة الجسم</h2>
+      <div class="checks">
+        <label class="check"><input type="checkbox" name="walk_no_reason"><span>مشيتُ أكثر من مرة بدون سبب واضح</span></label>
+        <label class="check"><input type="checkbox" name="sat_5min"><span>جلستُ 5 دقائق متواصلة بدون أن أقف</span></label>
+        <label class="check"><input type="checkbox" name="better_when_walk"><span>شعرتُ بتحسن عندما مشيت</span></label>
+        <label class="check"><input type="checkbox" name="not_better_when_walk"><span>لم أشعر بتحسن رغم المشي</span></label>
+      </div>
+
+      <div class="painRow">
+        <div class="label">ألم الساق</div>
+        <div class="painScale" role="radiogroup" aria-label="ألم الساق">
+          <label><input type="radio" name="leg_pain" value="0">0</label>
+          <label><input type="radio" name="leg_pain" value="1">1</label>
+          <label><input type="radio" name="leg_pain" value="2">2</label>
+          <label><input type="radio" name="leg_pain" value="3">3</label>
+          <label><input type="radio" name="leg_pain" value="4">4</label>
+          <label><input type="radio" name="leg_pain" value="5">5</label>
+          <label><input type="radio" name="leg_pain" value="6">6</label>
+          <label><input type="radio" name="leg_pain" value="7">7</label>
+          <label><input type="radio" name="leg_pain" value="8">8</label>
+          <label><input type="radio" name="leg_pain" value="9">9</label>
+          <label><input type="radio" name="leg_pain" value="10">10</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>4) التكرار والطلبات</h2>
+      <div class="checks">
+        <label class="check"><input type="checkbox" name="repeat_request"><span>كررتُ نفس الطلب أكثر من 3 مرات</span></label>
+        <label class="check"><input type="checkbox" name="request_no_time_reason"><span>طلبتُ عمل شيء بدون تحديد وقت أو سبب</span></label>
+        <label class="check"><input type="checkbox" name="changed_mind"><span>غيرتُ رأيي أكثر من مرة بنفس الموضوع</span></label>
+        <label class="check"><input type="checkbox" name="finished_without_change"><span>أنهيتُ ما بدأتُ بدون تغيير</span></label>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>5) المزاج</h2>
+      <div class="checks">
+        <label class="check"><input type="checkbox" name="calm_most"><span>كنتُ هادئة أغلب الوقت</span></label>
+        <label class="check"><input type="checkbox" name="irritable_affected"><span>شعرتُ بعصبية أثرت على كلامي</span></label>
+        <label class="check"><input type="checkbox" name="anxiety_affected"><span>شعرتُ بقلق أثر على يومي</span></label>
+        <label class="check"><input type="checkbox" name="reacted_5min"><span>بكيتُ أو انفعلتُ أكثر من 5 دقائق</span></label>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>6) الأفكار</h2>
+      <div class="checks">
+        <label class="check"><input type="checkbox" name="heard_voice_outside"><span>سمعتُ صوت واضح كأنه خارج رأسي</span></label>
+        <label class="check"><input type="checkbox" name="strong_thoughts_inside"><span>كانت عندي أفكار قوية لكن أعرف أنها من داخلي</span></label>
+        <label class="check"><input type="checkbox" name="thoughts_normal"><span>كانت أفكاري طبيعية</span></label>
+        <label class="check"><input type="checkbox" name="watched_feeling"><span>شعرتُ أن أحد يراقبني</span></label>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>7) في نهاية اليوم</h2>
+      <div class="checks">
+        <label class="check"><input type="checkbox" name="end_better"><span>اليوم أفضل من أمس</span></label>
+        <label class="check"><input type="checkbox" name="end_same"><span>نفس أمس</span></label>
+        <label class="check"><input type="checkbox" name="end_harder"><span>أصعب من أمس</span></label>
+        <div></div>
+      </div>
+
+      <div class="footerRow">
+        <div class="field">
+          <label>توقيع</label>
+          <input type="text" name="signature" placeholder="__________" />
+        </div>
+        <div class="field">
+          <label>ملاحظة</label>
+          <input type="text" name="final_note" placeholder="اختياري" />
+        </div>
+      </div>
+    </div>
+  </form>
+</main>
+
+<script>
+  // Clear button
+  document.getElementById("btnClear").addEventListener("click", () => {
+    if (!confirm("مسح كل العلامات؟")) return;
+    document.getElementById("dailyForm").reset();
+  });
+
+  // Make end-of-day checkboxes mutually exclusive
+  const endKeys = ["end_better","end_same","end_harder"];
+  endKeys.forEach(k => {
+    const el = document.querySelector(`input[name="${k}"]`);
+    if (!el) return;
+    el.addEventListener("change", () => {
+      if (!el.checked) return;
+      endKeys.forEach(other => {
+        if (other !== k) {
+          const o = document.querySelector(`input[name="${other}"]`);
+          if (o) o.checked = false;
+        }
+      });
+    });
+  });
+</script>
+</body>
+</html>
