@@ -13,7 +13,6 @@
       --bg:#ffffff;
       --panel:#f6f6f6;
     }
-
     *{ box-sizing:border-box; }
     body{
       margin:0;
@@ -31,7 +30,6 @@
       border-bottom:1px solid var(--border);
       padding:10px 12px;
     }
-
     .topbar{
       max-width:980px;
       margin:0 auto;
@@ -41,19 +39,16 @@
       align-items:center;
       justify-content:space-between;
     }
-
     .title{
       font-weight:900;
       font-size:16px;
     }
-
     .controls{
       display:flex;
       gap:8px;
       flex-wrap:wrap;
       align-items:center;
     }
-
     button{
       border:1px solid var(--border);
       background:#fff;
@@ -73,7 +68,7 @@
       justify-content:center;
     }
 
-    /* Single A4 sheet container */
+    /* A4 preview */
     .sheet{
       width:210mm;
       min-height:297mm;
@@ -90,7 +85,6 @@
       gap:10px;
       margin-bottom:10px;
     }
-
     .field{
       border:1px solid var(--border);
       border-radius:10px;
@@ -100,14 +94,12 @@
       justify-content:space-between;
       gap:10px;
     }
-
     .field label{
       font-weight:800;
       font-size:13px;
       color:var(--muted);
       white-space:nowrap;
     }
-
     input[type="text"], input[type="time"], input[type="number"]{
       width:60%;
       border:1px solid var(--border);
@@ -124,9 +116,7 @@
       border-radius:12px;
       padding:10px;
       margin:10px 0;
-      page-break-inside:avoid;
     }
-
     .section h2{
       margin:0 0 8px;
       font-size:15px;
@@ -138,7 +128,6 @@
       grid-template-columns: 1fr 1fr;
       gap:8px 10px;
     }
-
     .check{
       display:flex;
       gap:10px;
@@ -148,7 +137,6 @@
       border:1px solid transparent;
     }
     .check:hover{ background:#fafafa; border-color:var(--border); }
-
     input[type="checkbox"]{
       width:20px;
       height:20px;
@@ -212,7 +200,7 @@
       margin-top:10px;
     }
 
-    /* Print: force single page A4 and hide header */
+    /* Print from THIS page (some browsers block it, so we also provide Print Window method) */
     @media print{
       header{ display:none !important; }
       body{ background:#fff; }
@@ -239,8 +227,7 @@
   <div class="topbar">
     <div class="title">السجل اليومي – صفحة واحدة</div>
     <div class="controls">
-      <!-- Inline print works in more browsers -->
-      <button type="button" onclick="window.print()">🖨️ طباعة</button>
+      <button type="button" id="btnPrint">🖨️ طباعة</button>
       <button type="button" id="btnClear">🧹 مسح</button>
     </div>
   </div>
@@ -376,26 +363,184 @@
 </main>
 
 <script>
-  // Clear button
+  // Clear
   document.getElementById("btnClear").addEventListener("click", () => {
     if (!confirm("مسح كل العلامات؟")) return;
     document.getElementById("dailyForm").reset();
   });
 
-  // Make end-of-day checkboxes mutually exclusive
-  const endKeys = ["end_better","end_same","end_harder"];
-  endKeys.forEach(k => {
-    const el = document.querySelector(`input[name="${k}"]`);
-    if (!el) return;
-    el.addEventListener("change", () => {
-      if (!el.checked) return;
-      endKeys.forEach(other => {
-        if (other !== k) {
+  // End-of-day mutually exclusive
+  (function(){
+    const endKeys = ["end_better","end_same","end_harder"];
+    endKeys.forEach(k => {
+      const el = document.querySelector(`input[name="${k}"]`);
+      if (!el) return;
+      el.addEventListener("change", () => {
+        if (!el.checked) return;
+        endKeys.forEach(other => {
+          if (other === k) return;
           const o = document.querySelector(`input[name="${other}"]`);
           if (o) o.checked = false;
-        }
+        });
       });
     });
+  })();
+
+  // Robust printing: open a dedicated print window and print from there.
+  // This works on many mobile browsers where window.print is blocked in the main page.
+  function openPrintWindow(){
+    const form = document.getElementById("dailyForm");
+    const data = new FormData(form);
+
+    const checked = (name) => data.get(name) ? "☑" : "☐";
+    const val = (name) => (data.get(name) || "").toString().trim();
+    const radio = (name) => (data.get(name) || "").toString().trim();
+
+    const html = `
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>طباعة السجل اليومي</title>
+<style>
+  :root{ --font: Arial, system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif; --ink:#111; --muted:#444; --border:#e6e6e6; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:var(--font); color:var(--ink); }
+  .sheet{ width:210mm; min-height:297mm; padding:12mm; }
+  .row2{ display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:8px; }
+  .field{ border:1px solid var(--border); border-radius:10px; padding:8px; display:flex; justify-content:space-between; gap:10px; }
+  .field .k{ font-weight:800; font-size:12px; color:var(--muted); white-space:nowrap; }
+  .field .v{ font-size:13px; }
+  .section{ border:1px solid var(--border); border-radius:12px; padding:8px; margin:8px 0; }
+  h2{ margin:0 0 6px; font-size:14px; font-weight:900; }
+  .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:6px 10px; }
+  .item{ display:flex; gap:8px; align-items:flex-start; font-size:13px; }
+  .box{ width:18px; text-align:center; font-size:14px; line-height:1; margin-top:1px; }
+  .note{ border:1px solid var(--border); border-radius:10px; padding:8px; margin-top:6px; font-size:13px; min-height:36px; }
+  .pain{ margin-top:6px; font-size:13px; }
+  .footer{ display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:8px; }
+  @page{ size:A4; margin:0; }
+</style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="row2">
+      <div class="field"><div class="k">التاريخ</div><div class="v">${val("date")}</div></div>
+      <div class="field"><div class="k">الوقت</div><div class="v">${val("time")}</div></div>
+      <div class="field" style="grid-column:1 / -1;"><div class="k">عدد ساعات النوم</div><div class="v">${val("sleep_hours")}</div></div>
+    </div>
+
+    <div class="section">
+      <h2>الدواء اليوم</h2>
+      <div class="grid">
+        <div class="item"><div class="box">${checked("med_fluoxetine")}</div><div>فلوكستين</div></div>
+        <div class="item"><div class="box">${checked("med_olanzapine")}</div><div>أولانزابين</div></div>
+        <div class="item"><div class="box">${checked("med_atomoxetine")}</div><div>أتوموكسيتين</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>1) المهام والتنظيم</h2>
+      <div class="grid">
+        <div class="item"><div class="box">${checked("task_done_one")}</div><div>أنهيتُ مهمة واحدة على الأقل</div></div>
+        <div class="item"><div class="box">${checked("task_started_not_finished")}</div><div>بدأتُ أكثر من عمل ولم أكمله</div></div>
+        <div class="item"><div class="box">${checked("needed_reminders")}</div><div>احتجتُ تذكير أكثر من 3 مرات</div></div>
+        <div class="item"><div class="box">${checked("clear_plan_done")}</div><div>كان عندي خطة واضحة وأنهيتها</div></div>
+      </div>
+      <div class="note">${val("task_note")}</div>
+    </div>
+
+    <div class="section">
+      <h2>2) الكلام والتواصل</h2>
+      <div class="grid">
+        <div class="item"><div class="box">${checked("talk_5min")}</div><div>تكلمتُ أكثر من 5 دقائق بدون توقف</div></div>
+        <div class="item"><div class="box">${checked("repeat_talk")}</div><div>كررتُ نفس الكلام أكثر من 3 مرات</div></div>
+        <div class="item"><div class="box">${checked("orders_no_response")}</div><div>أعطيتُ أوامر بدون انتظار رد</div></div>
+        <div class="item"><div class="box">${checked("normal_conversation")}</div><div>صار حديث طبيعي (أخذ ورد)</div></div>
+      </div>
+      <div class="note">${val("talk_note")}</div>
+    </div>
+
+    <div class="section">
+      <h2>3) المشي وحركة الجسم</h2>
+      <div class="grid">
+        <div class="item"><div class="box">${checked("walk_no_reason")}</div><div>مشيتُ أكثر من مرة بدون سبب واضح</div></div>
+        <div class="item"><div class="box">${checked("sat_5min")}</div><div>جلستُ 5 دقائق متواصلة بدون أن أقف</div></div>
+        <div class="item"><div class="box">${checked("better_when_walk")}</div><div>شعرتُ بتحسن عندما مشيت</div></div>
+        <div class="item"><div class="box">${checked("not_better_when_walk")}</div><div>لم أشعر بتحسن رغم المشي</div></div>
+      </div>
+      <div class="pain">ألم الساق: ${radio("leg_pain") || "___"}</div>
+    </div>
+
+    <div class="section">
+      <h2>4) التكرار والطلبات</h2>
+      <div class="grid">
+        <div class="item"><div class="box">${checked("repeat_request")}</div><div>كررتُ نفس الطلب أكثر من 3 مرات</div></div>
+        <div class="item"><div class="box">${checked("request_no_time_reason")}</div><div>طلبتُ عمل شيء بدون تحديد وقت أو سبب</div></div>
+        <div class="item"><div class="box">${checked("changed_mind")}</div><div>غيرتُ رأيي أكثر من مرة بنفس الموضوع</div></div>
+        <div class="item"><div class="box">${checked("finished_without_change")}</div><div>أنهيتُ ما بدأتُ بدون تغيير</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>5) المزاج</h2>
+      <div class="grid">
+        <div class="item"><div class="box">${checked("calm_most")}</div><div>كنتُ هادئة أغلب الوقت</div></div>
+        <div class="item"><div class="box">${checked("irritable_affected")}</div><div>شعرتُ بعصبية أثرت على كلامي</div></div>
+        <div class="item"><div class="box">${checked("anxiety_affected")}</div><div>شعرتُ بقلق أثر على يومي</div></div>
+        <div class="item"><div class="box">${checked("reacted_5min")}</div><div>بكيتُ أو انفعلتُ أكثر من 5 دقائق</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>6) الأفكار</h2>
+      <div class="grid">
+        <div class="item"><div class="box">${checked("heard_voice_outside")}</div><div>سمعتُ صوت واضح كأنه خارج رأسي</div></div>
+        <div class="item"><div class="box">${checked("strong_thoughts_inside")}</div><div>كانت عندي أفكار قوية لكن أعرف أنها من داخلي</div></div>
+        <div class="item"><div class="box">${checked("thoughts_normal")}</div><div>كانت أفكاري طبيعية</div></div>
+        <div class="item"><div class="box">${checked("watched_feeling")}</div><div>شعرتُ أن أحد يراقبني</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>7) في نهاية اليوم</h2>
+      <div class="grid">
+        <div class="item"><div class="box">${checked("end_better")}</div><div>اليوم أفضل من أمس</div></div>
+        <div class="item"><div class="box">${checked("end_same")}</div><div>نفس أمس</div></div>
+        <div class="item"><div class="box">${checked("end_harder")}</div><div>أصعب من أمس</div></div>
+      </div>
+
+      <div class="footer">
+        <div class="field"><div class="k">توقيع</div><div class="v">${val("signature")}</div></div>
+        <div class="field"><div class="k">ملاحظة</div><div class="v">${val("final_note")}</div></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Print after load. Some mobile browsers require a small delay.
+  window.addEventListener("load", () => {
+    setTimeout(() => { window.print(); }, 300);
+  });
+<\/script>
+</body>
+</html>
+    `;
+
+    const w = window.open("", "_blank");
+    if (!w){
+      alert("المتصفح منع فتح نافذة الطباعة. افتحي الصفحة في Chrome أو Samsung Internet، ثم اطبعي من قائمة المتصفح.");
+      return;
+    }
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+  }
+
+  // Print button uses print window approach.
+  document.getElementById("btnPrint").addEventListener("click", () => {
+    openPrintWindow();
   });
 </script>
 </body>
