@@ -1,547 +1,251 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>السجل اليومي – صفحة واحدة</title>
-  <style>
-    :root{
-      --font: Arial, system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
-      --ink:#111;
-      --muted:#444;
-      --border:#e6e6e6;
-      --bg:#ffffff;
-      --panel:#f6f6f6;
-    }
-    *{ box-sizing:border-box; }
-    body{
-      margin:0;
-      font-family:var(--font);
-      background:var(--panel);
-      color:var(--ink);
-      line-height:1.55;
-    }
-
-    header{
-      position:sticky;
-      top:0;
-      z-index:10;
-      background:#fff;
-      border-bottom:1px solid var(--border);
-      padding:10px 12px;
-    }
-    .topbar{
-      max-width:980px;
-      margin:0 auto;
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-      justify-content:space-between;
-    }
-    .title{
-      font-weight:900;
-      font-size:16px;
-    }
-    .controls{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-    button{
-      border:1px solid var(--border);
-      background:#fff;
-      color:var(--ink);
-      padding:10px 12px;
-      border-radius:12px;
-      font-family:var(--font);
-      font-size:14px;
-      cursor:pointer;
-    }
-    button:hover{ background:#fafafa; }
-    button:active{ transform:translateY(1px); }
-
-    main{
-      padding:12px;
-      display:flex;
-      justify-content:center;
-    }
-
-    /* A4 preview */
-    .sheet{
-      width:210mm;
-      min-height:297mm;
-      background:var(--bg);
-      border:1px solid var(--border);
-      border-radius:10px;
-      padding:12mm;
-      box-shadow:0 8px 18px rgba(0,0,0,.08);
-    }
-
-    .row2{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px;
-      margin-bottom:10px;
-    }
-    .field{
-      border:1px solid var(--border);
-      border-radius:10px;
-      padding:10px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
-    .field label{
-      font-weight:800;
-      font-size:13px;
-      color:var(--muted);
-      white-space:nowrap;
-    }
-    input[type="text"], input[type="time"], input[type="number"]{
-      width:60%;
-      border:1px solid var(--border);
-      border-radius:10px;
-      padding:10px;
-      font-size:15px;
-      outline:none;
-      background:#fff;
-    }
-    input[type="number"]{ width:45%; }
-
-    .section{
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:10px;
-      margin:10px 0;
-    }
-    .section h2{
-      margin:0 0 8px;
-      font-size:15px;
-      font-weight:900;
-    }
-
-    .checks{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:8px 10px;
-    }
-    .check{
-      display:flex;
-      gap:10px;
-      align-items:flex-start;
-      padding:8px;
-      border-radius:10px;
-      border:1px solid transparent;
-    }
-    .check:hover{ background:#fafafa; border-color:var(--border); }
-    input[type="checkbox"]{
-      width:20px;
-      height:20px;
-      margin-top:2px;
-      flex:0 0 auto;
-    }
-    .check span{
-      font-size:14px;
-      line-height:1.5;
-    }
-
-    textarea{
-      width:100%;
-      min-height:42px;
-      resize:none;
-      border:1px solid var(--border);
-      border-radius:10px;
-      padding:10px;
-      font-size:14px;
-      outline:none;
-      margin-top:8px;
-    }
-
-    .painRow{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      justify-content:space-between;
-      margin-top:8px;
-      flex-wrap:wrap;
-    }
-    .painRow .label{
-      font-weight:800;
-      color:var(--muted);
-      font-size:13px;
-      white-space:nowrap;
-    }
-    .painScale{
-      display:flex;
-      gap:6px;
-      flex-wrap:wrap;
-      justify-content:flex-start;
-    }
-    .painScale label{
-      display:flex;
-      gap:6px;
-      align-items:center;
-      border:1px solid var(--border);
-      border-radius:999px;
-      padding:6px 10px;
-      font-size:12px;
-      cursor:pointer;
-      background:#fff;
-    }
-    .painScale input{ margin:0; width:16px; height:16px; }
-
-    .footerRow{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px;
-      margin-top:10px;
-    }
-
-    /* Print from THIS page (some browsers block it, so we also provide Print Window method) */
-    @media print{
-      header{ display:none !important; }
-      body{ background:#fff; }
-      main{ padding:0; }
-      .sheet{
-        width:210mm;
-        min-height:297mm;
-        border:none;
-        border-radius:0;
-        box-shadow:none;
-        padding:12mm;
-        margin:0;
-      }
-      @page{
-        size: A4;
-        margin: 0;
-      }
-    }
-  </style>
-</head>
-
-<body>
-<header>
-  <div class="topbar">
-    <div class="title">السجل اليومي – صفحة واحدة</div>
-    <div class="controls">
-      <button type="button" id="btnPrint">🖨️ طباعة</button>
-      <button type="button" id="btnClear">🧹 مسح</button>
-    </div>
-  </div>
-</header>
-
-<main>
-  <form class="sheet" id="dailyForm" autocomplete="off">
-    <div class="row2">
-      <div class="field">
-        <label>التاريخ</label>
-        <input type="text" name="date" placeholder="____ / ____ / ______" />
-      </div>
-      <div class="field">
-        <label>الوقت</label>
-        <input type="time" name="time" />
-      </div>
-      <div class="field" style="grid-column:1 / -1;">
-        <label>عدد ساعات النوم</label>
-        <input type="number" name="sleep_hours" min="0" max="24" step="0.5" placeholder="مثال: 7" />
-      </div>
-    </div>
-
-    <div class="section">
-      <h2>الدواء اليوم</h2>
-      <div class="checks">
-        <label class="check"><input type="checkbox" name="med_fluoxetine"><span>فلوكستين</span></label>
-        <label class="check"><input type="checkbox" name="med_olanzapine"><span>أولانزابين</span></label>
-        <label class="check"><input type="checkbox" name="med_atomoxetine"><span>أتوموكسيتين</span></label>
-        <div></div>
-      </div>
-    </div>
-
-    <div class="section">
-      <h2>1) المهام والتنظيم</h2>
-      <div class="checks">
-        <label class="check"><input type="checkbox" name="task_done_one"><span>أنهيتُ مهمة واحدة على الأقل</span></label>
-        <label class="check"><input type="checkbox" name="task_started_not_finished"><span>بدأتُ أكثر من عمل ولم أكمله</span></label>
-        <label class="check"><input type="checkbox" name="needed_reminders"><span>احتجتُ تذكير أكثر من 3 مرات</span></label>
-        <label class="check"><input type="checkbox" name="clear_plan_done"><span>كان عندي خطة واضحة وأنهيتها</span></label>
-      </div>
-      <textarea name="task_note" placeholder="إذا أردتِ، اكتبي جملة قصيرة..."></textarea>
-    </div>
-
-    <div class="section">
-      <h2>2) الكلام والتواصل</h2>
-      <div class="checks">
-        <label class="check"><input type="checkbox" name="talk_5min"><span>تكلمتُ أكثر من 5 دقائق بدون توقف</span></label>
-        <label class="check"><input type="checkbox" name="repeat_talk"><span>كررتُ نفس الكلام أكثر من 3 مرات</span></label>
-        <label class="check"><input type="checkbox" name="orders_no_response"><span>أعطيتُ أوامر بدون انتظار رد</span></label>
-        <label class="check"><input type="checkbox" name="normal_conversation"><span>صار حديث طبيعي (أخذ ورد)</span></label>
-      </div>
-      <textarea name="talk_note" placeholder="إذا أردتِ، اكتبي جملة قصيرة..."></textarea>
-    </div>
-
-    <div class="section">
-      <h2>3) المشي وحركة الجسم</h2>
-      <div class="checks">
-        <label class="check"><input type="checkbox" name="walk_no_reason"><span>مشيتُ أكثر من مرة بدون سبب واضح</span></label>
-        <label class="check"><input type="checkbox" name="sat_5min"><span>جلستُ 5 دقائق متواصلة بدون أن أقف</span></label>
-        <label class="check"><input type="checkbox" name="better_when_walk"><span>شعرتُ بتحسن عندما مشيت</span></label>
-        <label class="check"><input type="checkbox" name="not_better_when_walk"><span>لم أشعر بتحسن رغم المشي</span></label>
-      </div>
-
-      <div class="painRow">
-        <div class="label">ألم الساق</div>
-        <div class="painScale" role="radiogroup" aria-label="ألم الساق">
-          <label><input type="radio" name="leg_pain" value="0">0</label>
-          <label><input type="radio" name="leg_pain" value="1">1</label>
-          <label><input type="radio" name="leg_pain" value="2">2</label>
-          <label><input type="radio" name="leg_pain" value="3">3</label>
-          <label><input type="radio" name="leg_pain" value="4">4</label>
-          <label><input type="radio" name="leg_pain" value="5">5</label>
-          <label><input type="radio" name="leg_pain" value="6">6</label>
-          <label><input type="radio" name="leg_pain" value="7">7</label>
-          <label><input type="radio" name="leg_pain" value="8">8</label>
-          <label><input type="radio" name="leg_pain" value="9">9</label>
-          <label><input type="radio" name="leg_pain" value="10">10</label>
-        </div>
-      </div>
-    </div>
-
-    <div class="section">
-      <h2>4) التكرار والطلبات</h2>
-      <div class="checks">
-        <label class="check"><input type="checkbox" name="repeat_request"><span>كررتُ نفس الطلب أكثر من 3 مرات</span></label>
-        <label class="check"><input type="checkbox" name="request_no_time_reason"><span>طلبتُ عمل شيء بدون تحديد وقت أو سبب</span></label>
-        <label class="check"><input type="checkbox" name="changed_mind"><span>غيرتُ رأيي أكثر من مرة بنفس الموضوع</span></label>
-        <label class="check"><input type="checkbox" name="finished_without_change"><span>أنهيتُ ما بدأتُ بدون تغيير</span></label>
-      </div>
-    </div>
-
-    <div class="section">
-      <h2>5) المزاج</h2>
-      <div class="checks">
-        <label class="check"><input type="checkbox" name="calm_most"><span>كنتُ هادئة أغلب الوقت</span></label>
-        <label class="check"><input type="checkbox" name="irritable_affected"><span>شعرتُ بعصبية أثرت على كلامي</span></label>
-        <label class="check"><input type="checkbox" name="anxiety_affected"><span>شعرتُ بقلق أثر على يومي</span></label>
-        <label class="check"><input type="checkbox" name="reacted_5min"><span>بكيتُ أو انفعلتُ أكثر من 5 دقائق</span></label>
-      </div>
-    </div>
-
-    <div class="section">
-      <h2>6) الأفكار</h2>
-      <div class="checks">
-        <label class="check"><input type="checkbox" name="heard_voice_outside"><span>سمعتُ صوت واضح كأنه خارج رأسي</span></label>
-        <label class="check"><input type="checkbox" name="strong_thoughts_inside"><span>كانت عندي أفكار قوية لكن أعرف أنها من داخلي</span></label>
-        <label class="check"><input type="checkbox" name="thoughts_normal"><span>كانت أفكاري طبيعية</span></label>
-        <label class="check"><input type="checkbox" name="watched_feeling"><span>شعرتُ أن أحد يراقبني</span></label>
-      </div>
-    </div>
-
-    <div class="section">
-      <h2>7) في نهاية اليوم</h2>
-      <div class="checks">
-        <label class="check"><input type="checkbox" name="end_better"><span>اليوم أفضل من أمس</span></label>
-        <label class="check"><input type="checkbox" name="end_same"><span>نفس أمس</span></label>
-        <label class="check"><input type="checkbox" name="end_harder"><span>أصعب من أمس</span></label>
-        <div></div>
-      </div>
-
-      <div class="footerRow">
-        <div class="field">
-          <label>توقيع</label>
-          <input type="text" name="signature" placeholder="__________" />
-        </div>
-        <div class="field">
-          <label>ملاحظة</label>
-          <input type="text" name="final_note" placeholder="اختياري" />
-        </div>
-      </div>
-    </div>
-  </form>
-</main>
-
-<script>
-  // Clear
-  document.getElementById("btnClear").addEventListener("click", () => {
-    if (!confirm("مسح كل العلامات؟")) return;
-    document.getElementById("dailyForm").reset();
-  });
-
-  // End-of-day mutually exclusive
-  (function(){
-    const endKeys = ["end_better","end_same","end_harder"];
-    endKeys.forEach(k => {
-      const el = document.querySelector(`input[name="${k}"]`);
-      if (!el) return;
-      el.addEventListener("change", () => {
-        if (!el.checked) return;
-        endKeys.forEach(other => {
-          if (other === k) return;
-          const o = document.querySelector(`input[name="${other}"]`);
-          if (o) o.checked = false;
-        });
-      });
-    });
-  })();
-
-  // Robust printing: open a dedicated print window and print from there.
-  // This works on many mobile browsers where window.print is blocked in the main page.
-  function openPrintWindow(){
-    const form = document.getElementById("dailyForm");
-    const data = new FormData(form);
-
-    const checked = (name) => data.get(name) ? "☑" : "☐";
-    const val = (name) => (data.get(name) || "").toString().trim();
-    const radio = (name) => (data.get(name) || "").toString().trim();
-
-    const html = `
-<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>طباعة السجل اليومي</title>
-<style>
-  :root{ --font: Arial, system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif; --ink:#111; --muted:#444; --border:#e6e6e6; }
-  *{ box-sizing:border-box; }
-  body{ margin:0; font-family:var(--font); color:var(--ink); }
-  .sheet{ width:210mm; min-height:297mm; padding:12mm; }
-  .row2{ display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:8px; }
-  .field{ border:1px solid var(--border); border-radius:10px; padding:8px; display:flex; justify-content:space-between; gap:10px; }
-  .field .k{ font-weight:800; font-size:12px; color:var(--muted); white-space:nowrap; }
-  .field .v{ font-size:13px; }
-  .section{ border:1px solid var(--border); border-radius:12px; padding:8px; margin:8px 0; }
-  h2{ margin:0 0 6px; font-size:14px; font-weight:900; }
-  .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:6px 10px; }
-  .item{ display:flex; gap:8px; align-items:flex-start; font-size:13px; }
-  .box{ width:18px; text-align:center; font-size:14px; line-height:1; margin-top:1px; }
-  .note{ border:1px solid var(--border); border-radius:10px; padding:8px; margin-top:6px; font-size:13px; min-height:36px; }
-  .pain{ margin-top:6px; font-size:13px; }
-  .footer{ display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:8px; }
-  @page{ size:A4; margin:0; }
-</style>
+  <meta charset="UTF-8">
+  <title>AMC Clinical - Chest Pain - Tier 1</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="sheet">
-    <div class="row2">
-      <div class="field"><div class="k">التاريخ</div><div class="v">${val("date")}</div></div>
-      <div class="field"><div class="k">الوقت</div><div class="v">${val("time")}</div></div>
-      <div class="field" style="grid-column:1 / -1;"><div class="k">عدد ساعات النوم</div><div class="v">${val("sleep_hours")}</div></div>
-    </div>
 
-    <div class="section">
-      <h2>الدواء اليوم</h2>
-      <div class="grid">
-        <div class="item"><div class="box">${checked("med_fluoxetine")}</div><div>فلوكستين</div></div>
-        <div class="item"><div class="box">${checked("med_olanzapine")}</div><div>أولانزابين</div></div>
-        <div class="item"><div class="box">${checked("med_atomoxetine")}</div><div>أتوموكسيتين</div></div>
-      </div>
-    </div>
+<h1>AMC Clinical - Chest Pain - Tier 1</h1>
+<h2>Case 1 - Acute Coronary Syndrome - Classic - Strict AMC format</h2>
 
-    <div class="section">
-      <h2>1) المهام والتنظيم</h2>
-      <div class="grid">
-        <div class="item"><div class="box">${checked("task_done_one")}</div><div>أنهيتُ مهمة واحدة على الأقل</div></div>
-        <div class="item"><div class="box">${checked("task_started_not_finished")}</div><div>بدأتُ أكثر من عمل ولم أكمله</div></div>
-        <div class="item"><div class="box">${checked("needed_reminders")}</div><div>احتجتُ تذكير أكثر من 3 مرات</div></div>
-        <div class="item"><div class="box">${checked("clear_plan_done")}</div><div>كان عندي خطة واضحة وأنهيتها</div></div>
-      </div>
-      <div class="note">${val("task_note")}</div>
-    </div>
+<section>
+  <h3>SECTION 1 – Station Stem</h3>
+  <p>
+    You are the doctor in an Emergency Department cubicle. A 54-year-old man presents with chest pain that started 45 minutes ago.
+    He looks uncomfortable and is sweating.
+  </p>
+  <p>
+    Task: Take a focused history, assess stability, explain your likely diagnosis and immediate management, and outline safety netting.
+    You do not need to perform a physical examination, but you must state what you would examine and what you are looking for.
+  </p>
+  <p>
+    Setting: Australian ED. You have access to ECG, troponin, chest X-ray, blood tests, oxygen, IV access, aspirin, GTN, opioids, heparin, and cardiology referral pathways.
+  </p>
+</section>
 
-    <div class="section">
-      <h2>2) الكلام والتواصل</h2>
-      <div class="grid">
-        <div class="item"><div class="box">${checked("talk_5min")}</div><div>تكلمتُ أكثر من 5 دقائق بدون توقف</div></div>
-        <div class="item"><div class="box">${checked("repeat_talk")}</div><div>كررتُ نفس الكلام أكثر من 3 مرات</div></div>
-        <div class="item"><div class="box">${checked("orders_no_response")}</div><div>أعطيتُ أوامر بدون انتظار رد</div></div>
-        <div class="item"><div class="box">${checked("normal_conversation")}</div><div>صار حديث طبيعي (أخذ ورد)</div></div>
-      </div>
-      <div class="note">${val("talk_note")}</div>
-    </div>
+<section>
+  <h3>SECTION 2 – 2 Minute Reading Map</h3>
+  <ul>
+    <li>Immediate stability check: ABC, vitals, red flags, call for help if unstable</li>
+    <li>Chest pain history: onset, character, radiation, duration, triggers, relief, severity</li>
+    <li>Associated symptoms: dyspnoea, diaphoresis, nausea, syncope, palpitations</li>
+    <li>Rule out killers fast: ACS, dissection, PE, pneumothorax, tamponade, oesophageal rupture</li>
+    <li>Risk context: age, smoking, diabetes, HTN, lipids, family history, prior IHD</li>
+    <li>Immediate actions: ECG within 10 minutes, aspirin, IV access, bloods, troponin plan</li>
+    <li>Symptom control and anti ischaemic therapy: GTN if suitable, analgesia, oxygen only if hypoxic</li>
+    <li>Plan disposition: monitor, serial ECG, serial troponin, cardiology consult, reperfusion if STEMI</li>
+    <li>Explain diagnosis, differentials, urgency, and safety net</li>
+  </ul>
+</section>
 
-    <div class="section">
-      <h2>3) المشي وحركة الجسم</h2>
-      <div class="grid">
-        <div class="item"><div class="box">${checked("walk_no_reason")}</div><div>مشيتُ أكثر من مرة بدون سبب واضح</div></div>
-        <div class="item"><div class="box">${checked("sat_5min")}</div><div>جلستُ 5 دقائق متواصلة بدون أن أقف</div></div>
-        <div class="item"><div class="box">${checked("better_when_walk")}</div><div>شعرتُ بتحسن عندما مشيت</div></div>
-        <div class="item"><div class="box">${checked("not_better_when_walk")}</div><div>لم أشعر بتحسن رغم المشي</div></div>
-      </div>
-      <div class="pain">ألم الساق: ${radio("leg_pain") || "___"}</div>
-    </div>
+<section>
+  <h3>SECTION 3 – Spoken Script</h3>
 
-    <div class="section">
-      <h2>4) التكرار والطلبات</h2>
-      <div class="grid">
-        <div class="item"><div class="box">${checked("repeat_request")}</div><div>كررتُ نفس الطلب أكثر من 3 مرات</div></div>
-        <div class="item"><div class="box">${checked("request_no_time_reason")}</div><div>طلبتُ عمل شيء بدون تحديد وقت أو سبب</div></div>
-        <div class="item"><div class="box">${checked("changed_mind")}</div><div>غيرتُ رأيي أكثر من مرة بنفس الموضوع</div></div>
-        <div class="item"><div class="box">${checked("finished_without_change")}</div><div>أنهيتُ ما بدأتُ بدون تغيير</div></div>
-      </div>
-    </div>
+  <h4>Phase 1 – Introduction and Consent</h4>
+  <p>
+    Hello, I am Dr Ushana. I understand you have chest pain. I am going to ask targeted questions to work out the cause and keep you safe.
+    If at any point the pain worsens, you feel faint, or you cannot breathe, tell me immediately. Is that okay?
+  </p>
+  <p>
+    Before we continue, I want to quickly check you are stable. Are you able to speak in full sentences? Any severe shortness of breath right now?
+  </p>
+  <p>
+    Nurse, please record full observations now and place the patient on continuous cardiac monitoring. Please obtain a 12-lead ECG immediately.
+  </p>
 
-    <div class="section">
-      <h2>5) المزاج</h2>
-      <div class="grid">
-        <div class="item"><div class="box">${checked("calm_most")}</div><div>كنتُ هادئة أغلب الوقت</div></div>
-        <div class="item"><div class="box">${checked("irritable_affected")}</div><div>شعرتُ بعصبية أثرت على كلامي</div></div>
-        <div class="item"><div class="box">${checked("anxiety_affected")}</div><div>شعرتُ بقلق أثر على يومي</div></div>
-        <div class="item"><div class="box">${checked("reacted_5min")}</div><div>بكيتُ أو انفعلتُ أكثر من 5 دقائق</div></div>
-      </div>
-    </div>
+  <h4>Phase 2 – Open Question</h4>
+  <p>
+    Can you tell me what happened from the moment this started?
+  </p>
 
-    <div class="section">
-      <h2>6) الأفكار</h2>
-      <div class="grid">
-        <div class="item"><div class="box">${checked("heard_voice_outside")}</div><div>سمعتُ صوت واضح كأنه خارج رأسي</div></div>
-        <div class="item"><div class="box">${checked("strong_thoughts_inside")}</div><div>كانت عندي أفكار قوية لكن أعرف أنها من داخلي</div></div>
-        <div class="item"><div class="box">${checked("thoughts_normal")}</div><div>كانت أفكاري طبيعية</div></div>
-        <div class="item"><div class="box">${checked("watched_feeling")}</div><div>شعرتُ أن أحد يراقبني</div></div>
-      </div>
-    </div>
+  <h4>Phase 3 – Focused History</h4>
+  <p>
+    I will clarify the chest pain. When did it start, was it sudden or gradual, and what were you doing at the time?
+  </p>
+  <p>
+    Where exactly is the pain, and what does it feel like: pressure, tightness, burning, sharp, or tearing?
+  </p>
+  <p>
+    Does it radiate anywhere, for example to the left arm, both arms, jaw, neck, or back?
+  </p>
+  <p>
+    How severe is it out of 10? Is it constant or does it come and go? How long has this episode lasted?
+  </p>
+  <p>
+    What makes it worse: exertion, breathing, movement, lying flat, meals? What makes it better: rest, sitting forward, antacids, GTN if you have it?
+  </p>
+  <p>
+    Associated symptoms: any shortness of breath, sweating, nausea or vomiting, dizziness, fainting, palpitations, or new weakness?
+  </p>
+  <p>
+    Thrombotic risk and context: any calf swelling or pain, recent surgery, long travel, immobilisation, cancer, or hormone therapy?
+  </p>
+  <p>
+    Dissection screen: did the pain start instantly at maximum, is it tearing, does it go to the back, any new neurological symptoms?
+  </p>
+  <p>
+    Pneumothorax screen: sudden pleuritic pain with breathlessness, history of lung disease, trauma?
+  </p>
+  <p>
+    Oesophageal rupture screen: severe chest pain after vomiting, fever, or severe difficulty swallowing?
+  </p>
+  <p>
+    Past history: any previous heart attack, angina, stents, heart failure, stroke, clotting problems?
+  </p>
+  <p>
+    Risk factors: high blood pressure, diabetes, high cholesterol, smoking, kidney disease, and family history of early heart disease?
+  </p>
+  <p>
+    Medications and allergies: are you on aspirin, anticoagulants, blood pressure medicines, diabetes medicines, or erectile dysfunction medicines such as sildenafil in the last 24 to 48 hours?
+  </p>
+  <p>
+    Social and functional impact: do you smoke, drink alcohol, or use stimulants such as cocaine or amphetamines?
+  </p>
 
-    <div class="section">
-      <h2>7) في نهاية اليوم</h2>
-      <div class="grid">
-        <div class="item"><div class="box">${checked("end_better")}</div><div>اليوم أفضل من أمس</div></div>
-        <div class="item"><div class="box">${checked("end_same")}</div><div>نفس أمس</div></div>
-        <div class="item"><div class="box">${checked("end_harder")}</div><div>أصعب من أمس</div></div>
-      </div>
+  <h4>Phase 4 – Red Flag Sweep</h4>
+  <p>
+    I am going to confirm urgent danger signs.
+    Are you having ongoing crushing chest pain right now?
+    Any fainting or collapse?
+    Any severe breathlessness at rest?
+    Any new confusion, weakness, or trouble speaking?
+    Any coughing blood?
+  </p>
+  <p>
+    Nurse, if systolic blood pressure is low, if oxygen saturation is low, or if there are signs of shock, please call the ED senior doctor now.
+  </p>
 
-      <div class="footer">
-        <div class="field"><div class="k">توقيع</div><div class="v">${val("signature")}</div></div>
-        <div class="field"><div class="k">ملاحظة</div><div class="v">${val("final_note")}</div></div>
-      </div>
-    </div>
-  </div>
+  <h4>Phase 5 – Structured Summary</h4>
+  <p>
+    Let me summarise to check I have this right.
+    You have had central chest pressure for about 45 minutes, it started at rest, it is severe, associated with sweating and nausea, and it may radiate to your left arm.
+    You have risk factors including [state key risk factors obtained], and no clear features suggesting aortic dissection, PE, or pneumothorax from the history so far.
+    Is that accurate?
+  </p>
 
-<script>
-  // Print after load. Some mobile browsers require a small delay.
-  window.addEventListener("load", () => {
-    setTimeout(() => { window.print(); }, 300);
-  });
-<\/script>
-</body>
-</html>
-    `;
+  <h4>Phase 6 – Diagnosis Explanation</h4>
+  <p>
+    The most likely cause is acute coronary syndrome, meaning reduced blood flow to the heart muscle, usually due to a blood clot forming on a narrowed artery.
+    This can range from unstable angina to a heart attack.
+    The immediate priority is to confirm it quickly with an ECG and blood tests and to start treatment that reduces risk of heart damage and complications.
+  </p>
 
-    const w = window.open("", "_blank");
-    if (!w){
-      alert("المتصفح منع فتح نافذة الطباعة. افتحي الصفحة في Chrome أو Samsung Internet، ثم اطبعي من قائمة المتصفح.");
-      return;
-    }
-    w.document.open();
-    w.document.write(html);
-    w.document.close();
-  }
+  <h4>Phase 7 – Differential Explanation</h4>
+  <p>
+    There are other serious causes of chest pain we always consider.
+    These include aortic dissection, pulmonary embolism, pneumothorax, pericarditis, and oesophageal causes.
+    Your symptom pattern is most consistent with ACS, but we will still check for alternatives using the ECG, examination, and targeted tests.
+  </p>
 
-  // Print button uses print window approach.
-  document.getElementById("btnPrint").addEventListener("click", () => {
-    openPrintWindow();
-  });
-</script>
+  <h4>Phase 8 – Management Plan</h4>
+  <p>
+    I will outline what we do now in ED.
+  </p>
+  <p>
+    First, immediate tests and monitoring: continuous monitoring, repeat observations, 12-lead ECG now and repeat if pain changes, IV cannula, and bloods including troponin, full blood count, electrolytes, kidney function, glucose, and coagulation profile.
+    We will also arrange a chest X-ray to look for other causes and complications.
+  </p>
+  <p>
+    Second, immediate medications:
+    we will give aspirin now unless you have a true allergy or active major bleeding.
+    If your blood pressure is safe and you have not taken sildenafil or similar recently, we can give GTN to reduce pain and heart workload.
+    For pain, we will use appropriate analgesia, often with an opioid if needed, while monitoring blood pressure and breathing.
+    Oxygen is used only if your oxygen saturation is low or you have respiratory distress.
+  </p>
+  <p>
+    Third, risk stratification and definitive pathway:
+    if the ECG shows ST elevation consistent with a heart attack, we will activate the reperfusion pathway urgently for primary PCI, with cardiology involvement immediately.
+    If there is no ST elevation, we will treat as non ST elevation ACS based on risk and troponin, with serial ECGs and troponins, and cardiology review for antithrombotic therapy and early angiography when indicated.
+  </p>
+  <p>
+    Fourth, examination I would perform now:
+    I would assess general appearance, level of distress, and perfusion.
+    Cardiovascular exam for heart sounds, murmurs, signs of heart failure, and blood pressure in both arms if dissection is a concern.
+    Respiratory exam for crackles, wheeze, or reduced breath sounds.
+    Peripheral exam for oedema and calf swelling.
+    I would look for signs of shock such as cold clammy skin and altered mental state.
+  </p>
+  <p>
+    Fifth, escalation:
+    I will involve the ED senior doctor early if there is ongoing pain, abnormal vital signs, concerning ECG changes, arrhythmia, or if the patient deteriorates.
+    Cardiology will be contacted based on ECG and risk profile.
+  </p>
+
+  <h4>Phase 9 – Urgency Classification</h4>
+  <p>
+    This is time critical.
+    If this is a heart attack, the goal is rapid reperfusion to reduce heart muscle damage.
+    Even if it is not ST elevation, it still requires urgent monitoring and treatment today.
+  </p>
+
+  <h4>Phase 10 – Safety Net</h4>
+  <p>
+    While you are in ED, tell us immediately if pain worsens, you feel faint, you develop severe breathlessness, palpitations, or new weakness.
+    After discharge, which only happens if it is proven low risk and safe, you must return immediately for recurrent chest pain, breathlessness, fainting, or sweating with nausea.
+  </p>
+
+  <h4>Phase 11 – Check Understanding</h4>
+  <p>
+    Can you tell me what you understand about what might be happening and what we are doing next?
+    Do you have any allergies to aspirin or any recent use of sildenafil or similar medications?
+    Do you have any questions right now?
+  </p>
+</section>
+
+<section>
+  <h3>SECTION 4 – Internal Thinking – Not Spoken</h3>
+  <p>
+    First job is stability and early ECG. Classic ACS until proven otherwise. Must exclude immediate killers quickly without getting lost in detail.
+    Ensure aspirin early, monitor, IV access, troponin strategy, serial ECG. Avoid GTN if hypotension, RV infarct suspicion, or recent PDE5 inhibitor use.
+    If STEMI, activate cath lab pathway. If NSTEMI or unstable angina, risk stratify, start appropriate antithrombotics per local protocol with senior and cardiology input.
+    Always consider dissection and PE if atypical features or red flags emerge. Document time of onset and time of ECG.
+  </p>
+</section>
+
+<section>
+  <h3>SECTION 5 – Scoring Phrases</h3>
+  <ul>
+    <li>This is chest pain, I will treat as ACS until proven otherwise</li>
+    <li>Obtain a 12-lead ECG immediately and repeat if symptoms change</li>
+    <li>Continuous cardiac monitoring and frequent observations</li>
+    <li>Give aspirin now unless true allergy or active major bleeding</li>
+    <li>GTN only if blood pressure is safe and no recent sildenafil type medication</li>
+    <li>Oxygen only if hypoxic or in respiratory distress</li>
+    <li>Serial troponins and serial ECGs for risk stratification</li>
+    <li>Escalate early to ED senior and involve cardiology based on ECG and risk</li>
+    <li>If STEMI, activate urgent reperfusion pathway for primary PCI</li>
+    <li>Explicitly screen for other lethal causes: dissection, PE, pneumothorax</li>
+  </ul>
+</section>
+
+<section>
+  <h3>SECTION 6 – MASTERY DRILL</h3>
+
+  <p><strong>A) 30-Second Compression</strong><br>
+    Acute coronary syndrome; classic central pressure with diaphoresis and radiation; first action ECG now plus aspirin; urgent ED monitoring and cardiology pathway if STEMI.
+  </p>
+
+  <p><strong>B) 10-Second Trigger Rule</strong><br>
+    Central pressure chest pain with autonomic symptoms equals ACS until proven otherwise.
+  </p>
+
+  <p><strong>C) Differential Ranking</strong><br>
+    1. Acute coronary syndrome<br>
+    2. Aortic dissection<br>
+    3. Pericarditis
+  </p>
+
+  <p><strong>D) Why Not The Main Mimic?</strong><br>
+    Pericarditis is typically pleuritic and improves leaning forward.
+  </p>
+
+  <p><strong>E) First Action Rule</strong><br>
+    Get a 12-lead ECG immediately.
+  </p>
+
+</section>
+
 </body>
 </html>
